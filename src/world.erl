@@ -16,6 +16,8 @@
 %%% Record definitions
 -record(state, {}).
 
+-include("grind.hrl").
+
 %%%====================================================================
 %%% API
 %%%====================================================================
@@ -58,16 +60,3 @@ handle_info(Info, State) ->
 %%%====================================================================
 %%% Internal functions
 %%%====================================================================
-info(Message) ->
-    info("~s", [Message]).
-info(Format, Things) ->
-    error_logger:info(format(Format, Things)).
-
-format(Format, Things) ->
-    lists:flatten(io_lib:format(Format, Things)).
-
-call(Request) ->
-    gen_server:call(?MODULE, Request).
-
-cast(Message) ->
-    gen_server:cast(?MODULE, Message).
