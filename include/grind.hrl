@@ -1,3 +1,5 @@
+-record(player, {name :: string()}).
+
 info(Format) ->
     info(Format, []).
 info(Format, Data) ->

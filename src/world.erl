@@ -1,32 +1,33 @@
-%%%-------------------------------------------------------------------
+%%%--------------------------------------------------------------------
 %%% File  : world.erl
 %%% Desc. : The state of the world.
-%%%-------------------------------------------------------------------
+%%%--------------------------------------------------------------------
 -module(world).
 
 -behaviour(gen_server).
 
-%%% API
+%%% API ---------------------------------------------------------------
 -export([start_link/0, stop/0,
          add_player/1, remove_player/1, update_player/2
         ]).
 
-%%% debugging
+%%% debugging ---------------------------------------------------------
 -export([state/0]).
 
-%%% gen_server callbacks
+%%% gen_server callbacks ----------------------------------------------
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
-%%% Record definitions
+%%% record definitions ------------------------------------------------
 -record(state, {players :: list()}).
--record(player, {name :: string()}).
 
+%%% global includes ---------------------------------------------------
 -include("grind.hrl").
 
 %%%====================================================================
 %%% API
 %%%====================================================================
+
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
@@ -42,7 +43,7 @@ remove_player(Name) ->
 update_player(Name, F) ->
     cast({update_player, Name, F}).
 
-%%% debugging
+%%% debugging ---------------------------------------------------------
 
 state() ->
     call(state).
@@ -50,6 +51,7 @@ state() ->
 %%%====================================================================
 %%% gen_server callbacks
 %%%====================================================================
+
 init([]) ->
     Players = players_empty(),
     {ok, #state{players = Players}}.
@@ -60,7 +62,8 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%% Calls
+%%% Calls -------------------------------------------------------------
+
 handle_call({add_player, Name}, From, State) ->
     {Reply, NewState} =
         case do_add_player(Name, State#state.players) of
@@ -78,7 +81,8 @@ handle_call(Request, From, State) ->
     info("unrecognized call request: ~p, from ~p.", [Request, From]),
     {noreply, State}.
 
-%%% Casts
+%%% Casts -------------------------------------------------------------
+
 handle_cast({remove_player, Name}, State) ->
     NewPlayers = do_remove_player(Name, State#state.players),
     NewState = State#state{players = NewPlayers},
@@ -104,7 +108,8 @@ handle_cast(Msg, State) ->
     info("unrecognized cast: ~p.", [Msg]),
     {noreply, State}.
 
-%%% Info
+%%% Info --------------------------------------------------------------
+
 handle_info(Info, State) ->
     info("unrecognized info: ~p.", [Info]),
     {noreply, State}.
@@ -113,7 +118,7 @@ handle_info(Info, State) ->
 %%% Internal functions
 %%%====================================================================
 
-%%% Players
+%%% Players -----------------------------------------------------------
 
 new_player(Name) ->
     #player{name = Name}.
@@ -150,7 +155,7 @@ do_update_player(Name, Players, F) ->
             end
     end.
 
-%%% Misc
+%%% Misc --------------------------------------------------------------
 
 do_spawn(F) ->
     Ref = erlang:make_ref(),
