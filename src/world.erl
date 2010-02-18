@@ -2,26 +2,32 @@
 %%% File  : world.erl
 %%% Desc. : The state of the world.
 %%%--------------------------------------------------------------------
+
 -module(world).
 
 -behaviour(gen_server).
 
 %%% API ---------------------------------------------------------------
--export([start_link/0, stop/0,
-         add_player/1, remove_player/1, update_player/2
-        ]).
 
-%%% debugging ---------------------------------------------------------
+-export([start_link/0, stop/0]).
+
+-export([add_player/1, remove_player/1, update_player/2]).
+
+-export([add_action/1, tick_actions/0]).
+
 -export([state/0]).
 
 %%% gen_server callbacks ----------------------------------------------
+
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
 %%% record definitions ------------------------------------------------
--record(state, {players :: list()}).
+
+-record(state, {players, actions}).
 
 %%% global includes ---------------------------------------------------
+
 -include("grind.hrl").
 
 %%%====================================================================
@@ -34,6 +40,8 @@ start_link() ->
 stop() ->
     ?cast(stop).
 
+%%% players -----------------------------------------------------------
+
 add_player(Name) ->
     ?call({add_player, Name}).
 
@@ -42,6 +50,14 @@ remove_player(Name) ->
 
 update_player(Name, F) ->
     ?cast({update_player, Name, F}).
+
+%%% actions -----------------------------------------------------------
+
+add_action(Action) ->
+    ?cast({add_action, Action}).
+
+tick_actions() ->
+    ?call(tick_actions).
 
 %%% debugging ---------------------------------------------------------
 
@@ -54,7 +70,8 @@ state() ->
 
 init([]) ->
     Players = players_empty(),
-    {ok, #state{players = Players}}.
+    Actions = actions_empty(),
+    {ok, #state{players = Players, actions = Actions}}.
 
 terminate(_Reason, _State) ->
     ok.
@@ -64,7 +81,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%% Calls -------------------------------------------------------------
 
-handle_call({add_player, Name}, From, State) ->
+handle_call({add_player, Name}, _From, State) ->
     {Reply, NewState} =
         case do_add_player(Name, State#state.players) of
             {ok, NewPlayers} ->
@@ -74,8 +91,13 @@ handle_call({add_player, Name}, From, State) ->
         end,
     {reply, Reply, NewState};
 
-handle_call(state, From, State) ->
+handle_call(state, _From, State) ->
     {reply, State, State};
+
+handle_call(tick_actions, _From, State) ->
+    {Reply, NewActions} = do_tick_actions(State#state.actions),
+    NewState = State#state{actions = NewActions},
+    {reply, Reply, NewState};
 
 handle_call(Request, From, State) ->
     ?info("unrecognized call request: ~p, from ~p.", [Request, From]),
@@ -103,6 +125,11 @@ handle_cast({update_player, Name, F}, State) ->
 handle_cast(stop, State) ->
     ?info("received stop message.", []),
     {stop, State};
+
+handle_cast({add_action, Action}, State) ->
+    NewActions = do_add_action(Action, State#state.actions),
+    NewState = State#state{actions = NewActions},
+    {noreply, NewState};
 
 handle_cast(Msg, State) ->
     ?info("unrecognized cast: ~p.", [Msg]),
@@ -154,6 +181,28 @@ do_update_player(Name, Players, F) ->
                     Error
             end
     end.
+
+%%% Actions -----------------------------------------------------------
+
+actions_empty() ->
+    [].
+
+do_add_action(Action, Actions) ->
+    [Action | Actions].
+
+do_tick_actions(Actions) ->
+    %% update the delay
+    Tick = fun (A) -> A#action{delay = A#action.delay - 1} end,
+    TickedActions = lists:map(Tick, Actions),
+    %% find actions with zero delay
+    IsReady = fun (A) -> A#action.delay =< 0 end,
+    {Ready, NotReady} = lists:partition(IsReady, TickedActions),
+    %% reset the delay for sticky actions
+    IsSticky = fun (A) -> A#action.sticky end,
+    Sticky = lists:filter(IsSticky, Ready),
+    Reset = fun (A) -> A#action{delay = A#action.delay0} end,
+    NewActions = NotReady ++ lists:map(Reset, Sticky),
+    {Ready, NewActions}.
 
 %%% Misc --------------------------------------------------------------
 
