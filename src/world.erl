@@ -32,21 +32,21 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop() ->
-    cast(stop).
+    ?cast(stop).
 
 add_player(Name) ->
-    call({add_player, Name}).
+    ?call({add_player, Name}).
 
 remove_player(Name) ->
-    cast({remove_player, Name}).
+    ?cast({remove_player, Name}).
 
 update_player(Name, F) ->
-    cast({update_player, Name, F}).
+    ?cast({update_player, Name, F}).
 
 %%% debugging ---------------------------------------------------------
 
 state() ->
-    call(state).
+    ?call(state).
 
 %%%====================================================================
 %%% gen_server callbacks
@@ -78,7 +78,7 @@ handle_call(state, From, State) ->
     {reply, State, State};
 
 handle_call(Request, From, State) ->
-    info("unrecognized call request: ~p, from ~p.", [Request, From]),
+    ?info("unrecognized call request: ~p, from ~p.", [Request, From]),
     {noreply, State}.
 
 %%% Casts -------------------------------------------------------------
@@ -92,7 +92,7 @@ handle_cast({update_player, Name, F}, State) ->
     NewPlayers =
         case do_update_player(Name, State#state.players, F) of
             {error, Reason} ->
-                info("error (~p) when updating player ~s", [Reason, Name]),
+                ?info("error (~p) when updating player ~s", [Reason, Name]),
                 State#state.players;
             Updated ->
                 Updated
@@ -101,17 +101,17 @@ handle_cast({update_player, Name, F}, State) ->
     {noreply, NewState};
 
 handle_cast(stop, State) ->
-    info("received stop message."),
+    ?info("received stop message.", []),
     {stop, State};
 
 handle_cast(Msg, State) ->
-    info("unrecognized cast: ~p.", [Msg]),
+    ?info("unrecognized cast: ~p.", [Msg]),
     {noreply, State}.
 
 %%% Info --------------------------------------------------------------
 
 handle_info(Info, State) ->
-    info("unrecognized info: ~p.", [Info]),
+    ?info("unrecognized info: ~p.", [Info]),
     {noreply, State}.
 
 %%%====================================================================
