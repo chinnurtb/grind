@@ -1,11 +1,14 @@
--record(player, {name}). % atom
+-record(player, {name :: string(), 
+                 hp   :: integer()
+                }).
 
--record(action, {subject,   % abercombie
+-record(action, {subject   :: string(),
                  predicate, % attack | {spell, fire} | {item, potion}
-                 object,    % bartholomew
-                 sticky,    % true | false
-                 delay,     % 2
-                 delay0}).  % 5
+                 object    :: string(),
+                 sticky    :: boolean(),
+                 delay     :: integer(),
+                 delay0    :: integer()
+                }).
 
 -define(info(Format, Data),
         error_logger:info_msg("<[~p]> " ++ Format, [?MODULE] ++ Data)).
