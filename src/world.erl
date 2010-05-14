@@ -95,8 +95,7 @@ handle_call(state, _From, State) ->
     {reply, State, State};
 
 handle_call(tick_actions, _From, State) ->
-    {Reply, NewActions} = do_tick_actions(State#state.actions),
-    NewState = State#state{actions = NewActions},
+    {Reply, NewState} = do_tick_actions(State),
     {reply, Reply, NewState};
 
 handle_call(Request, From, State) ->
@@ -124,7 +123,7 @@ handle_cast({update_player, Name, F}, State) ->
 
 handle_cast(stop, State) ->
     ?info("received stop message.", []),
-    {stop, State};
+    {stop, normal};
 
 handle_cast({add_action, Action}, State) ->
     NewActions = do_add_action(Action, State#state.actions),
@@ -190,19 +189,26 @@ actions_empty() ->
 do_add_action(Action, Actions) ->
     [Action | Actions].
 
-do_tick_actions(Actions) ->
-    %% update the delay
+do_tick_actions(State) ->
+    %% update the delay of the actions
     Tick = fun (A) -> A#action{delay = A#action.delay - 1} end,
-    TickedActions = lists:map(Tick, Actions),
-    %% find actions with zero delay
+    TickedActions = lists:map(Tick, State#state.actions),
+    %% find actions with a zero delay
     IsReady = fun (A) -> A#action.delay =< 0 end,
     {Ready, NotReady} = lists:partition(IsReady, TickedActions),
+    NewState = lists:foldl(fun execute_action/2, State, Ready),
     %% reset the delay for sticky actions
     IsSticky = fun (A) -> A#action.sticky end,
     Sticky = lists:filter(IsSticky, Ready),
     Reset = fun (A) -> A#action{delay = A#action.delay0} end,
     NewActions = NotReady ++ lists:map(Reset, Sticky),
-    {Ready, NewActions}.
+    TickedState = NewState#state{actions = NewActions},
+    {ok, TickedState}.
+
+execute_action(Action, State) ->
+    ?info("Executing ~w.", [Action]),
+    NewState = State,
+    NewState.
 
 %%% Misc --------------------------------------------------------------
 
