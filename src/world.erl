@@ -28,7 +28,7 @@
 
 %%% global includes ---------------------------------------------------
 
--include("grind.hrl").
+-include("../include/grind.hrl").
 
 %%%====================================================================
 %%% API
@@ -121,7 +121,7 @@ handle_cast({update_player, Name, F}, State) ->
     NewState = State#state{players = NewPlayers},
     {noreply, NewState};
 
-handle_cast(stop, State) ->
+handle_cast(stop, _State) ->
     ?info("received stop message.", []),
     {stop, normal};
 
@@ -165,11 +165,11 @@ do_add_player(Name, Players) ->
 do_remove_player(Name, Players) ->
     lists:keydelete(Name, #player.name, Players).
 
-do_find_player(Name, Players) ->
+find_player(Name, Players) ->
     lists:keyfind(Name, #player.name, Players).
 
 do_update_player(Name, Players, F) ->
-    case do_find_player(Name, Players) of
+    case find_player(Name, Players) of
         false ->
             {error, "player not found"};
         Player ->
@@ -187,7 +187,7 @@ actions_empty() ->
     [].
 
 do_add_action(Action, Actions) ->
-    [Action | Actions].
+    [Action#action{delay = Action#action.delay0} | Actions].
 
 do_tick_actions(State) ->
     %% update the delay of the actions
@@ -196,6 +196,7 @@ do_tick_actions(State) ->
     %% find actions with a zero delay
     IsReady = fun (A) -> A#action.delay =< 0 end,
     {Ready, NotReady} = lists:partition(IsReady, TickedActions),
+    %% execute the ready actions
     NewState = lists:foldl(fun execute_action/2, State, Ready),
     %% reset the delay for sticky actions
     IsSticky = fun (A) -> A#action.sticky end,
@@ -205,9 +206,18 @@ do_tick_actions(State) ->
     TickedState = NewState#state{actions = NewActions},
     {ok, TickedState}.
 
+%%% Executing actions
 execute_action(Action, State) ->
     ?info("Executing ~w.", [Action]),
-    NewState = State,
+    SubjectName = Action#action.subject,
+    ObjectName = Action#action.object,
+    Players = State#state.players,
+    [Subject, Object] =
+        [find_player(Name, Players) || Name <- [SubjectName, ObjectName]],
+    {NewSubject, NewObject} = (Action#action.event)(Subject, Object),
+    SubjectUpdated = do_update_player(SubjectName, Players, fun (_) -> NewSubject end),
+    BothUpdated = do_update_player(ObjectName, SubjectUpdated, fun (_) -> NewObject end),
+    NewState = State#state{players = BothUpdated},
     NewState.
 
 %%% Misc --------------------------------------------------------------

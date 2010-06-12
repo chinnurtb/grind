@@ -1,13 +1,14 @@
--record(player, {name :: string(), 
-                 hp   :: integer()
+-record(player, {name   :: string(), 
+                 hp     :: integer(),
+                 attack :: integer()
                 }).
 
 -record(action, {subject   :: string(),
-                 predicate, % attack | {spell, fire} | {item, potion}
                  object    :: string(),
                  sticky    :: boolean(),
                  delay     :: integer(),
-                 delay0    :: integer()
+                 delay0    :: integer(),
+                 event     :: function()
                 }).
 
 -define(info(Format, Data),
