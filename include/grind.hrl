@@ -1,14 +1,15 @@
--record(player, {name   :: string(), 
+-record(player, {name   :: string(),
                  hp     :: integer(),
                  attack :: integer()
                 }).
 
--record(action, {subject   :: string(),
-                 object    :: string(),
-                 sticky    :: boolean(),
-                 delay     :: integer(),
-                 delay0    :: integer(),
-                 event     :: function()
+-record(action, {subject :: string(),
+                 object  :: string(),
+                 type    :: atom(),
+                 sticky  :: boolean(),
+                 delay   :: integer(),
+                 delay0  :: integer(),
+                 event   :: function()
                 }).
 
 -define(info(Format, Data),

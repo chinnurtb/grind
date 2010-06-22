@@ -208,7 +208,8 @@ do_tick_actions(State) ->
 
 %%% Executing actions
 execute_action(Action, State) ->
-    ?info("Executing ~w.", [Action]),
+    ?info("Executing ~w ~w ~w.",
+	 [Action#action.subject, Action#action.type, Action#action.object]),
     SubjectName = Action#action.subject,
     ObjectName = Action#action.object,
     Players = State#state.players,
