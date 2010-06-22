@@ -42,8 +42,8 @@ stop() ->
 
 %%% players -----------------------------------------------------------
 
-add_player(Name) ->
-    ?call({add_player, Name}).
+add_player(Player) ->
+    ?call({add_player, Player}).
 
 remove_player(Name) ->
     ?cast({remove_player, Name}).
@@ -81,9 +81,9 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%% Calls -------------------------------------------------------------
 
-handle_call({add_player, Name}, _From, State) ->
+handle_call({add_player, Player}, _From, State) ->
     {Reply, NewState} =
-        case do_add_player(Name, State#state.players) of
+        case do_add_player(Player, State#state.players) of
             {ok, NewPlayers} ->
                 {ok, State#state{players = NewPlayers}};
             Error ->
@@ -146,19 +146,16 @@ handle_info(Info, State) ->
 
 %%% Players -----------------------------------------------------------
 
-new_player(Name) ->
-    #player{name = Name}.
-
 players_empty() ->
     [].
 
-do_add_player(Name, Players) ->
-    case lists:keymember(Name, #player.name, Players) of
+do_add_player(Player, Players) ->
+    case lists:keymember(Player#player.name, #player.name, Players) of
         true ->
             {error, "player name taken"};
         false ->
-            NewPlayers = lists:keystore(Name, #player.name, Players,
-                                        new_player(Name)),
+            NewPlayers = lists:keystore(Player#player.name, #player.name,
+                                        Players, Player),
             {ok, NewPlayers}
     end.
 
