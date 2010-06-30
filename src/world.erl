@@ -213,8 +213,10 @@ execute_action(Action, State) ->
     [Subject, Object] =
         [find_player(Name, Players) || Name <- [SubjectName, ObjectName]],
     {NewSubject, NewObject} = (Action#action.event)(Subject, Object),
-    SubjectUpdated = do_update_player(SubjectName, Players, fun (_) -> NewSubject end),
-    BothUpdated = do_update_player(ObjectName, SubjectUpdated, fun (_) -> NewObject end),
+    SubjectUpdated =
+        do_update_player(SubjectName, Players, fun (_) -> NewSubject end),
+    BothUpdated =
+        do_update_player(ObjectName, SubjectUpdated, fun (_) -> NewObject end),
     NewState = State#state{players = BothUpdated},
     NewState.
 
