@@ -1,6 +1,8 @@
--record(player, {name   :: string(),
-                 hp     :: integer(),
-                 attack :: integer()
+-record(player, {name      :: string(),
+                 class     :: atom(),
+                 stats     :: [{atom(), term()}],
+                 modifiers :: [{atom(), term()}],
+                 abilities :: [{atom(), term()}]
                 }).
 
 -record(action, {subject :: string(),
