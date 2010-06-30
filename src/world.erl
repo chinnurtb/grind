@@ -205,7 +205,7 @@ do_tick_actions(State) ->
 
 %%% Executing actions
 execute_action(Action, State) ->
-    ?info("Executing ~w ~w ~w.",
+    ?info("Executing ~s ~w ~s.~n",
 	 [Action#action.subject, Action#action.type, Action#action.object]),
     SubjectName = Action#action.subject,
     ObjectName = Action#action.object,
