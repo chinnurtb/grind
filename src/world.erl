@@ -121,9 +121,9 @@ handle_cast({update_player, Name, F}, State) ->
     NewState = State#state{players = NewPlayers},
     {noreply, NewState};
 
-handle_cast(stop, _State) ->
+handle_cast(stop, State) ->
     ?info("received stop message.", []),
-    {stop, normal};
+    {stop, normal, State};
 
 handle_cast({add_action, Action}, State) ->
     NewActions = do_add_action(Action, State#state.actions),
