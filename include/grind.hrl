@@ -15,7 +15,7 @@
                 }).
 
 -define(info(Format, Data),
-        error_logger:info_msg("<[~p]> " ++ Format, [?MODULE] ++ Data)).
+        error_logger:info_msg("<[~p]> " ++ Format ++ "~n", [?MODULE] ++ Data)).
 
 -define(call(Request),
         gen_server:call(?MODULE, Request)).
